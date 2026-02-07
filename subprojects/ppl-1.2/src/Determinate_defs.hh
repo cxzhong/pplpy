@@ -211,7 +211,7 @@ public:
     having signature <CODE>void foo(PSET& x, const PSET& y)</CODE> that
     applies an operator to \c x and \c y and assigns the result to \c x.
     For instance, such a function object is obtained by
-    <CODE>std::mem_fun_ref(&C_Polyhedron::intersection_assign)</CODE>.
+    <CODE>std::mem_fn(&C_Polyhedron::intersection_assign)</CODE>.
   */
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
   template <typename Binary_Operator_Assign>

@@ -100389,7 +100389,7 @@ public:
     having signature <CODE>void foo(PSET& x, const PSET& y)</CODE> that
     applies an operator to \c x and \c y and assigns the result to \c x.
     For instance, such a function object is obtained by
-    <CODE>std::mem_fun_ref(&C_Polyhedron::intersection_assign)</CODE>.
+    <CODE>std::mem_fn(&C_Polyhedron::intersection_assign)</CODE>.
   */
 #endif // defined(PPL_DOXYGEN_INCLUDE_IMPLEMENTATION_DETAILS)
   template <typename Binary_Operator_Assign>
@@ -101620,6 +101620,7 @@ private:
 
 /* Automatically generated from PPL source file ../src/Powerset_inlines.hh line 28. */
 #include <algorithm>
+#include <functional>
 
 namespace Parma_Polyhedra_Library {
 
@@ -101791,7 +101792,7 @@ Powerset<D>::collapse() {
 template <typename D>
 inline void
 Powerset<D>::meet_assign(const Powerset& y) {
-  pairwise_apply_assign(y, std::mem_fun_ref(&D::meet_assign));
+  pairwise_apply_assign(y, std::mem_fn(&D::meet_assign));
 }
 
 template <typename D>
@@ -103749,7 +103750,7 @@ inline void
 Pointset_Powerset<PSET>::intersection_assign(const Pointset_Powerset& y) {
   Pointset_Powerset& x = *this;
   x.pairwise_apply_assign(y,
-                          Det_PSET::lift_op_assign(std::mem_fun_ref(&PSET::intersection_assign)));
+                          Det_PSET::lift_op_assign(std::mem_fn(&PSET::intersection_assign)));
 }
 
 template <typename PSET>
@@ -103757,7 +103758,7 @@ inline void
 Pointset_Powerset<PSET>::time_elapse_assign(const Pointset_Powerset& y) {
   Pointset_Powerset& x = *this;
   x.pairwise_apply_assign(y,
-                          Det_PSET::lift_op_assign(std::mem_fun_ref(&PSET::time_elapse_assign)));
+                          Det_PSET::lift_op_assign(std::mem_fn(&PSET::time_elapse_assign)));
 }
 
 template <typename PSET>

@@ -26,6 +26,7 @@ site: http://bugseng.com/products/ppl/ . */
 
 #include "assertions.hh"
 #include <algorithm>
+#include <functional>
 
 namespace Parma_Polyhedra_Library {
 
@@ -197,7 +198,7 @@ Powerset<D>::collapse() {
 template <typename D>
 inline void
 Powerset<D>::meet_assign(const Powerset& y) {
-  pairwise_apply_assign(y, std::mem_fun_ref(&D::meet_assign));
+  pairwise_apply_assign(y, std::mem_fn(&D::meet_assign));
 }
 
 template <typename D>

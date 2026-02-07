@@ -28,6 +28,7 @@ site: http://bugseng.com/products/ppl/ . */
 #include "Constraint_System_defs.hh"
 #include "Constraint_System_inlines.hh"
 #include "Congruence_defs.hh"
+#include <functional>
 #include "Congruence_System_defs.hh"
 #include "Congruence_System_inlines.hh"
 #include "C_Polyhedron_defs.hh"
@@ -221,7 +222,7 @@ inline void
 Pointset_Powerset<PSET>::intersection_assign(const Pointset_Powerset& y) {
   Pointset_Powerset& x = *this;
   x.pairwise_apply_assign(y,
-                          Det_PSET::lift_op_assign(std::mem_fun_ref(&PSET::intersection_assign)));
+                          Det_PSET::lift_op_assign(std::mem_fn(&PSET::intersection_assign)));
 }
 
 template <typename PSET>
@@ -229,7 +230,7 @@ inline void
 Pointset_Powerset<PSET>::time_elapse_assign(const Pointset_Powerset& y) {
   Pointset_Powerset& x = *this;
   x.pairwise_apply_assign(y,
-                          Det_PSET::lift_op_assign(std::mem_fun_ref(&PSET::time_elapse_assign)));
+                          Det_PSET::lift_op_assign(std::mem_fn(&PSET::time_elapse_assign)));
 }
 
 template <typename PSET>
