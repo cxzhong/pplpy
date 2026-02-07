@@ -50,9 +50,9 @@ jobs:
           - macos-latest
           - ubuntu-24.04-arm
     env:
-      CIBW_BUILD: "cp312-* cp313-* cp314-*"
-      CIBW_SKIP: "*-musllinux*"
+      CIBW_BUILD: "cp312-* cp313-* cp314-* cp314t-*"
       CIBW_BEFORE_BUILD_LINUX: >-
+        (command -v apk > /dev/null && apk add --no-cache m4 g++ || true) &&
         cd /tmp &&
         tar xJf {project}/gmp-6.3.0.tar.xz &&
         cd gmp-6.3.0 &&
