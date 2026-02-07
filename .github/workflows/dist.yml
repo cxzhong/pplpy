@@ -54,7 +54,7 @@ jobs:
       CIBW_SKIP: "*-musllinux*"
       CIBW_BEFORE_BUILD_LINUX: >-
         cd /tmp &&
-        curl -L https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz | tar xJ &&
+        tar xJf {project}/gmp-6.3.0.tar.xz &&
         cd gmp-6.3.0 &&
         ./configure --disable-shared --enable-static --enable-cxx --with-pic --prefix=/usr/local &&
         make -j$(nproc) &&
@@ -79,6 +79,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+
+      - name: Download GMP source
+        run: curl -fL --retry 3 --connect-timeout 30 -o gmp-6.3.0.tar.xz https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.1
