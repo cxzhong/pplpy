@@ -1,6 +1,6 @@
 name: Documentation
 on:
-  push: { branches: [ "master", "meson" ] }
+  push: { branches: [ "master" ] }
   pull_request: { branches: [ "master" ] }
 
 concurrency:
