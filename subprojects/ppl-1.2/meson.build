@@ -5,14 +5,20 @@ project('ppl', 'cpp',
 
 cpp = meson.get_compiler('cpp')
 
-# Find GMP / GMPXX
+# Find GMP / GMPXX (prefer static to avoid dual-GMP conflicts in wheels)
 gmp_dep = dependency('gmp', required: false)
 if not gmp_dep.found()
-  gmp_dep = cpp.find_library('gmp')
+  gmp_dep = cpp.find_library('gmp', static: true, required: false)
+  if not gmp_dep.found()
+    gmp_dep = cpp.find_library('gmp')
+  endif
 endif
 gmpxx_dep = dependency('gmpxx', required: false)
 if not gmpxx_dep.found()
-  gmpxx_dep = cpp.find_library('gmpxx')
+  gmpxx_dep = cpp.find_library('gmpxx', static: true, required: false)
+  if not gmpxx_dep.found()
+    gmpxx_dep = cpp.find_library('gmpxx')
+  endif
 endif
 
 # ---------- sizes (used by ppl-config.h) ----------
