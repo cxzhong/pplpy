@@ -57,6 +57,7 @@ jobs:
       CIBW_BEFORE_BUILD_MACOS: >-
         brew install gmp
       CIBW_ENVIRONMENT_MACOS: >-
+        MACOSX_DEPLOYMENT_TARGET=15.0
         CPATH=$(brew --prefix gmp)/include:$CPATH
         LIBRARY_PATH=$(brew --prefix gmp)/lib:$LIBRARY_PATH
       CIBW_BUILD_FRONTEND: build
