@@ -2,7 +2,7 @@ name: Distributions
 
 on:
   push:
-    branches: [ "master", "meson" ]
+    branches: [ "master" ]
     tags: [ "*" ]
   pull_request:
   workflow_dispatch:
