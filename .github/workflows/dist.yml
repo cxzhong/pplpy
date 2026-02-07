@@ -53,7 +53,7 @@ jobs:
       CIBW_BUILD: "cp312-* cp313-* cp314-*"
       CIBW_SKIP: "*-musllinux*"
       CIBW_BEFORE_BUILD_LINUX: >-
-        (yum install -y gmp-devel || apt-get install -y libgmp-dev) &&
+        (yum install -y gmp-devel gmp-static || apt-get install -y libgmp-dev) &&
         rm -f /usr/lib64/libgmp.so /usr/lib64/libgmpxx.so
         /usr/lib/x86_64-linux-gnu/libgmp.so /usr/lib/x86_64-linux-gnu/libgmpxx.so
         /usr/lib/aarch64-linux-gnu/libgmp.so /usr/lib/aarch64-linux-gnu/libgmpxx.so
