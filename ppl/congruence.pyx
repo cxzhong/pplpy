@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: freethreading_compatible = True
 # distutils: libraries = gmp gmpxx ppl m
 #*****************************************************************************
 #       Copyright (C) 2020 Vincent Delecroix <vincent.delecroix@labri.fr>
@@ -235,11 +236,12 @@ cdef class Congruence_System(object):
         >>> cmd += 'cs = Congruence_System( (3*x == 2*y+1) % 7 )\n'
         >>> cmd += 'cs.ascii_dump()\n'
         >>> import subprocess, sys
-        >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
+        >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')).strip())
+        >>> print(str(err.decode('ascii')))
         1 x 2 SPARSE
         size 3 6 3 -2 m 7
+        <BLANKLINE>
         """
         self.thisptr.ascii_dump()
 

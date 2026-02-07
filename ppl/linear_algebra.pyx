@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: freethreading_compatible = True
 # distutils: libraries = gmp gmpxx ppl m
 #*****************************************************************************
 #       Copyright (C) 2010-2014 Volker Braun  <vbraun.name@gmail.com>
@@ -495,9 +496,10 @@ cdef class Variables_Set(object):
             >>> cmd += 'S.ascii_dump()\n'
             >>> import subprocess
             >>> import sys
-            >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
+            >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
             >>> out, err = proc.communicate()
-            >>> print(str(err.decode('ascii')).strip())
+            >>> print(str(err.decode('ascii')))
+            <BLANKLINE>
             variables( 1 )
             123
         """
@@ -991,7 +993,7 @@ cdef class Linear_Expression(object):
         >>> cmd += 'e.ascii_dump()\n'
         >>> from subprocess import Popen, PIPE
         >>> import sys
-        >>> proc = Popen([sys.executable, '-Xgil=1', '-c', cmd], stdout=PIPE, stderr=PIPE)
+        >>> proc = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE)
         >>> out, err = proc.communicate()
         >>> len(out) == 0
         True

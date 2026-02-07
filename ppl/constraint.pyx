@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: freethreading_compatible = True
 # distutils: libraries = gmp gmpxx ppl m
 #*****************************************************************************
 #       Copyright (C) 2010-2014 Volker Braun  <vbraun.name@gmail.com>
@@ -482,10 +483,11 @@ cdef class Constraint(object):
         >>> cmd += 'e = (3*x+2*y+1 > 0)\n'
         >>> cmd += 'e.ascii_dump()\n'
         >>> import subprocess, sys
-        >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
+        >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')).strip())
+        >>> print(str(err.decode('ascii')))
         size 4 1 3 2 -1 ...
+        <BLANKLINE>
         """
         self.thisptr.ascii_dump()
 
@@ -830,11 +832,12 @@ cdef class Constraint_System(object):
         >>> cmd += 'cs = Constraint_System( 3*x > 2*y+1 )\n'
         >>> cmd += 'cs.ascii_dump()\n'
         >>> import subprocess, sys
-        >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
+        >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')).strip())
+        >>> print(str(err.decode('ascii')))
         topology NOT_NECESSARILY_CLOSED
         ...
+        <BLANKLINE>
         """
         self.thisptr.ascii_dump()
 
@@ -1180,9 +1183,9 @@ cdef class Poly_Con_Relation(object):
         >>> cmd  = 'from ppl import Poly_Con_Relation\n'
         >>> cmd += 'Poly_Con_Relation.nothing().ascii_dump()\n'
         >>> import subprocess, sys
-        >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
+        >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')).strip())
+        >>> print(str(err.decode('ascii')))
         NOTHING
         """
         self.thisptr.ascii_dump()
