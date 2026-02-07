@@ -51,7 +51,7 @@ jobs:
           - ubuntu-24.04-arm
     env:
       CIBW_BUILD: "cp312-* cp313-* cp314-* cp314t-*"
-      CIBW_FREE_THREADED_SUPPORT: true
+      CIBW_ENABLE: "cpython-freethreading"
       CIBW_BEFORE_BUILD_LINUX: >-
         (command -v apk > /dev/null && apk add --no-cache m4 g++ || true) &&
         cd /tmp &&
