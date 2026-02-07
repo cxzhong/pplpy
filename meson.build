@@ -1,7 +1,7 @@
 project('pplpy', 'cpp', 'cython',
   version: '0.8.10',
   default_options: [
-    'cpp_std=c++23',
+    'cpp_std=c++17',
   ],
 )
 
