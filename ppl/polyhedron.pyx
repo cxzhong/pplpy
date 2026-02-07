@@ -2285,11 +2285,11 @@ cdef class Polyhedron(object):
         >>> cmd += 'p.ascii_dump()\n'
         >>> from subprocess import Popen, PIPE
         >>> import sys
-        >>> proc = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE)
+        >>> proc = Popen([sys.executable, '-Xgil=1', '-c', cmd], stdout=PIPE, stderr=PIPE)
         >>> out, err = proc.communicate()
         >>> len(out)
         0
-        >>> print(str(err.decode('ascii')))
+        >>> print(str(err.decode('ascii')).strip())
         space_dim 2
         ...
         con_sys (up-to-date)
@@ -2303,8 +2303,6 @@ cdef class Polyhedron(object):
         2 x 2
         0 0
         0 1
-        <BLANKLINE>
-        <BLANKLINE>
         """
         sig_on()
         self.thisptr.ascii_dump()

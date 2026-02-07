@@ -636,11 +636,10 @@ cdef class Generator(object):
         >>> cmd += 'p.ascii_dump()\n'
         >>> import subprocess
         >>> import sys
-        >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
+        >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')))
+        >>> print(str(err.decode('ascii')).strip())
         size 3 1 3 2 ...
-        <BLANKLINE>
         """
         self.thisptr.ascii_dump()
 
@@ -884,12 +883,11 @@ cdef class Generator_System(object):
         >>> cmd += 'gs = Generator_System( point(3*x+2*y+1) )\n'
         >>> cmd += 'gs.ascii_dump()\n'
         >>> import subprocess, sys
-        >>> proc = subprocess.Popen([sys.executable, '-c', cmd], stderr=subprocess.PIPE)
+        >>> proc = subprocess.Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=subprocess.PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')))
+        >>> print(str(err.decode('ascii')).strip())
         topology NECESSARILY_CLOSED
         ...
-        <BLANKLINE>
         """
         self.thisptr.ascii_dump()
 
@@ -1176,9 +1174,9 @@ cdef class Poly_Gen_Relation(object):
         >>> cmd += 'Poly_Gen_Relation.nothing().ascii_dump()\n'
         >>> from subprocess import Popen, PIPE
         >>> import sys
-        >>> proc = Popen([sys.executable, '-c', cmd], stderr=PIPE)
+        >>> proc = Popen([sys.executable, '-Xgil=1', '-c', cmd], stderr=PIPE)
         >>> out, err = proc.communicate()
-        >>> print(str(err.decode('ascii')))
+        >>> print(str(err.decode('ascii')).strip())
         NOTHING
         >>> proc.returncode
         0
