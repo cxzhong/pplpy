@@ -13,10 +13,9 @@ name = "pplpy"
 description = "Python PPL wrapper"
 readme = "README.rst"
 authors = [{name = "Vincent Delecroix", email = "vincent.delecroix@labri.fr"}]
-license = {text = "GPL v3"}
+license = "GPL-3.0-only"
 requires-python = ">=3.12"
 classifiers = [
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: C++",
     "Programming Language :: Python",
     "Development Status :: 5 - Production/Stable",
