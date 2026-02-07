@@ -53,9 +53,13 @@ jobs:
       CIBW_BUILD: "cp312-* cp313-* cp314-*"
       CIBW_SKIP: "*-musllinux*"
       CIBW_BEFORE_BUILD_LINUX: >-
-        yum install -y gmp-devel || apt-get install -y libgmp-dev
+        (yum install -y gmp-devel || apt-get install -y libgmp-dev) &&
+        rm -f /usr/lib64/libgmp.so /usr/lib64/libgmpxx.so
+        /usr/lib/x86_64-linux-gnu/libgmp.so /usr/lib/x86_64-linux-gnu/libgmpxx.so
+        /usr/lib/aarch64-linux-gnu/libgmp.so /usr/lib/aarch64-linux-gnu/libgmpxx.so
       CIBW_BEFORE_BUILD_MACOS: >-
-        brew install gmp
+        brew install gmp &&
+        rm -f $(brew --prefix gmp)/lib/libgmp*.dylib $(brew --prefix gmp)/lib/libgmpxx*.dylib
       CIBW_ENVIRONMENT_MACOS: >-
         MACOSX_DEPLOYMENT_TARGET=15.0
         CPATH=$(brew --prefix gmp)/include:$CPATH
