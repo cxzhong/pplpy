@@ -832,7 +832,7 @@ cdef class Polyhedron(object):
         cdef PPL_Coefficient sup_n
         cdef PPL_Coefficient sup_d
         cdef Generator g = Generator.point()
-        cdef cppbool maximum
+        cdef cppbool maximum = False
         sig_on()
         rc = self.thisptr.maximize(<PPL_Linear_Expression&>expr.thisptr[0], sup_n, sup_d, maximum, g.thisptr[0])
         sig_off()
@@ -912,7 +912,7 @@ cdef class Polyhedron(object):
         cdef PPL_Coefficient inf_n
         cdef PPL_Coefficient inf_d
         cdef Generator g = Generator.point()
-        cdef cppbool minimum
+        cdef cppbool minimum = False
         sig_on()
         rc = self.thisptr.minimize(<PPL_Linear_Expression&>expr.thisptr[0], inf_n, inf_d, minimum, g.thisptr[0])
         sig_off()

@@ -28,6 +28,7 @@ site: http://bugseng.com/products/ppl/ . */
 #include "Sparse_Row_defs.hh"
 #include <iostream>
 #include <iomanip>
+#include <cstring>
 
 namespace PPL = Parma_Polyhedra_Library;
 
@@ -55,7 +56,7 @@ PPL::Dense_Row::resize(dimension_type new_size) {
       Coefficient* const new_vec = impl.coeff_allocator.allocate(new_capacity);
 
       if (impl.vec != 0) {
-        memcpy(new_vec, impl.vec, sizeof(Coefficient) * impl.size);
+        std::memcpy(static_cast<void*>(new_vec), static_cast<const void*>(impl.vec), sizeof(Coefficient) * impl.size);
         impl.coeff_allocator.deallocate(impl.vec, impl.capacity);
       }
 
@@ -100,7 +101,7 @@ PPL::Dense_Row::resize(dimension_type new_size, dimension_type new_capacity) {
 
     PPL_ASSERT(impl.vec != 0);
 
-    memcpy(new_vec, impl.vec, sizeof(Coefficient) * impl.size);
+    std::memcpy(static_cast<void*>(new_vec), static_cast<const void*>(impl.vec), sizeof(Coefficient) * impl.size);
 
     impl.coeff_allocator.deallocate(impl.vec, impl.capacity);
 
@@ -113,7 +114,7 @@ PPL::Dense_Row::resize(dimension_type new_size, dimension_type new_capacity) {
       Coefficient* const new_vec = impl.coeff_allocator.allocate(new_capacity);
 
       if (impl.vec != 0) {
-        memcpy(new_vec, impl.vec, sizeof(Coefficient) * impl.size);
+        std::memcpy(static_cast<void*>(new_vec), static_cast<const void*>(impl.vec), sizeof(Coefficient) * impl.size);
         impl.coeff_allocator.deallocate(impl.vec, impl.capacity);
       }
 
@@ -165,8 +166,8 @@ PPL::Dense_Row::add_zeroes_and_shift(dimension_type n, dimension_type i) {
     }
 
     // Raw-copy the coefficients.
-    memcpy(new_row.impl.vec, impl.vec, sizeof(Coefficient) * i);
-    memcpy(&(new_row.impl.vec[i + n]), &impl.vec[i],
+    std::memcpy(static_cast<void*>(new_row.impl.vec), static_cast<const void*>(impl.vec), sizeof(Coefficient) * i);
+    std::memcpy(static_cast<void*>(&(new_row.impl.vec[i + n])), static_cast<const void*>(&impl.vec[i]),
            sizeof(Coefficient) * (impl.size - i));
 
     using std::swap;
@@ -180,7 +181,7 @@ PPL::Dense_Row::add_zeroes_and_shift(dimension_type n, dimension_type i) {
 
   }
   else {
-    memmove(&impl.vec[n + i], &impl.vec[i], sizeof(Coefficient)
+    std::memmove(static_cast<void*>(&impl.vec[n + i]), static_cast<const void*>(&impl.vec[i]), sizeof(Coefficient)
             * (impl.size - i));
     impl.size = i;
     const dimension_type target_size = impl.size + n;
