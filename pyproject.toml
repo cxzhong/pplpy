@@ -1,11 +1,12 @@
 [build-system]
 requires = [
-    "setuptools>=61.2",
+    "meson-python>=0.15",
+    "meson>=1.3.0",
     "Cython",
     "cysignals",
     "gmpy2>=2.1.0b1",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "mesonpy"
 
 [project]
 name = "pplpy"
@@ -40,7 +41,8 @@ dependencies = [
     "cysignals",
     "gmpy2>=2.1.0b1",
 ]
-dynamic = ["version"]
+dynamic = []
+version = "0.8.10"
 
 [project.optional-dependencies]
 doc = [
@@ -50,14 +52,3 @@ doc = [
 [project.urls]
 Homepage = "https://github.com/sagemath/pplpy"
 Download = "https://pypi.org/project/pplpy/#files"
-
-[tool.setuptools]
-packages = ["ppl"]
-platforms = ["any"]
-include-package-data = false
-
-[tool.setuptools.dynamic]
-version = {attr = "ppl.__version__"}
-
-[tool.setuptools.package-data]
-ppl = ["*.pxd", "*.h", "*.hh"]
