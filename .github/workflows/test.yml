@@ -7,8 +7,11 @@ concurrency:
   group: test-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  test-ubuntu:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -24,7 +27,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgmp-dev libmpfr-dev libmpc-dev libglpk-dev
+          sudo apt-get install -y libgmp-dev libmpfr-dev libmpc-dev libglpk-dev libppl-dev
 
       - name: Install Python build dependencies
         run: |
@@ -45,6 +48,55 @@ jobs:
 
       - name: Build (meson)
         run: |
+          meson setup builddir
+          meson compile -C builddir
+
+      - name: Test (meson test)
+        run: |
+          meson test -C builddir -v
+
+      - name: Show logs
+        run: cat builddir/meson-logs/testlog.txt || true
+        if: ${{ always() }}
+
+  test-macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install system dependencies
+        run: |
+          brew install gmp mpfr libmpc glpk ppl
+
+      - name: Install Python build dependencies
+        run: |
+          pip install --upgrade pip
+          pip install meson-python meson ninja cython cysignals "gmpy2>=2.1.0b1"
+
+      - name: Build and install
+        run: |
+          export PKG_CONFIG_PATH="$(brew --prefix ppl)/lib/pkgconfig:$(brew --prefix gmp)/lib/pkgconfig:$(brew --prefix mpfr)/lib/pkgconfig:$(brew --prefix libmpc)/lib/pkgconfig:$(brew --prefix glpk)/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+          pip install --no-build-isolation --verbose .
+
+      - name: Install test dependencies
+        run: |
+          pip install sphinx cython-lint
+
+      - name: Lint
+        run: |
+          cython-lint --ignore=E265,E266,E501,E741 --exclude='ppl_decl.pxd' ppl/
+
+      - name: Build (meson)
+        run: |
+          export PKG_CONFIG_PATH="$(brew --prefix ppl)/lib/pkgconfig:$(brew --prefix gmp)/lib/pkgconfig:$(brew --prefix mpfr)/lib/pkgconfig:$(brew --prefix libmpc)/lib/pkgconfig:$(brew --prefix glpk)/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
           meson setup builddir
           meson compile -C builddir
 
