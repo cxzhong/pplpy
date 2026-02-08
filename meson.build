@@ -18,9 +18,13 @@ if ppl_config.found()
     compile_args: ppl_cppflags,
     link_args: ppl_ldflags,
   )
+  # System PPL 1.2 headers use std::mem_fun_ref, removed in C++17.
+  # Compile consumer code with C++11 to stay compatible.
+  ppl_cpp_std_override = ['cpp_std=c++11']
 else
   ppl_proj = subproject('ppl-1.2')
   ppl_dep = ppl_proj.get_variable('ppl_dep')
+  ppl_cpp_std_override = []
 endif
 
 # ---------- Build the ppl package ----------

@@ -17,3 +17,4 @@ pplpy.egg-info/
 docs/build/
 .idea/*
 /.tox
+builddir/

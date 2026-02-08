@@ -65,7 +65,7 @@ foreach ext_name, pyx_file : extensions
     pyx_file, 'ppl_shim.cc',
     dependencies: common_deps,
     include_directories: ppl_shim_inc,
-    override_options: ['cython_language=cpp'],
+    override_options: ['cython_language=cpp'] + ppl_cpp_std_override,
     install: true,
     install_dir: py.get_install_dir() / 'ppl',
     cpp_args: common_cpp_args,

@@ -36,7 +36,7 @@ foreach test_name : ['testpplpy', 'testpplpy2']
     test_name + '.pyx',
     dependencies: common_deps,
     include_directories: ppl_src_inc,
-    override_options: ['cython_language=cpp'],
+    override_options: ['cython_language=cpp'] + ppl_cpp_std_override,
     cpp_args: common_cpp_args,
     cython_args: [
       '--directive', 'language_level=3',
