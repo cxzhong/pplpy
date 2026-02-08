@@ -13,10 +13,9 @@ py = import('python').find_installation(pure: false)
 ppl_config = find_program('ppl-config', required: false)
 if ppl_config.found()
   ppl_cppflags = run_command(ppl_config, '--cppflags', check: true).stdout().strip().split()
-  ppl_cxxflags = run_command(ppl_config, '--cxxflags', check: true).stdout().strip().split()
   ppl_ldflags = run_command(ppl_config, '--ldflags', check: true).stdout().strip().split()
   ppl_dep = declare_dependency(
-    compile_args: ppl_cppflags + ppl_cxxflags,
+    compile_args: ppl_cppflags,
     link_args: ppl_ldflags,
   )
 else
