@@ -1,7 +1,7 @@
 name: Test
 on:
-  push: { branches: [ "master" ] }
-  pull_request: { branches: [ "master" ] }
+  push: { branches: [ "master", "meson" ] }
+  pull_request: { branches: [ "master", "meson" ] }
 
 concurrency:
   group: test-${{ github.ref }}
@@ -76,6 +76,10 @@ jobs:
         run: |
           brew install gmp mpfr libmpc glpk ppl
 
+      - name: Set Homebrew pkg-config paths
+        run: |
+          echo "PKG_CONFIG_PATH=$(brew --prefix ppl)/lib/pkgconfig:$(brew --prefix gmp)/lib/pkgconfig:$(brew --prefix mpfr)/lib/pkgconfig:$(brew --prefix libmpc)/lib/pkgconfig:$(brew --prefix glpk)/lib/pkgconfig:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+
       - name: Install Python build dependencies
         run: |
           pip install --upgrade pip
@@ -83,7 +87,6 @@ jobs:
 
       - name: Build and install
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix ppl)/lib/pkgconfig:$(brew --prefix gmp)/lib/pkgconfig:$(brew --prefix mpfr)/lib/pkgconfig:$(brew --prefix libmpc)/lib/pkgconfig:$(brew --prefix glpk)/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
           pip install --no-build-isolation --verbose .
 
       - name: Install test dependencies
@@ -96,7 +99,6 @@ jobs:
 
       - name: Build (meson)
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix ppl)/lib/pkgconfig:$(brew --prefix gmp)/lib/pkgconfig:$(brew --prefix mpfr)/lib/pkgconfig:$(brew --prefix libmpc)/lib/pkgconfig:$(brew --prefix glpk)/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
           meson setup builddir
           meson compile -C builddir
 
