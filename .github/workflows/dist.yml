@@ -54,7 +54,18 @@ jobs:
       # Non-Python packages to install as spkgs
       TARGETS_PRE: gmp mpfr mpc ppl-ensure
       # Environment during wheel build
-      CIBW_ENVIRONMENT: "PATH=$(pwd)/local/bin:$PATH CPATH=$(pwd)/local/include:/usr/local/include:$CPATH LIBRARY_PATH=$(pwd)/local/lib:/usr/local/lib:$LIBRARY_PATH LD_LIBRARY_PATH=$(pwd)/local/lib:/usr/local/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=$(pwd)/local/share/pkgconfig:/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH ACLOCAL_PATH=/usr/share/aclocal"
+      CIBW_ENVIRONMENT: "PATH=$(pwd)/local/bin:$PATH CPATH=$(pwd)/local/include:$CPATH LIBRARY_PATH=$(pwd)/local/lib:$LIBRARY_PATH LD_LIBRARY_PATH=$(pwd)/local/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=$(pwd)/local/share/pkgconfig:$PKG_CONFIG_PATH ACLOCAL_PATH=/usr/share/aclocal"
+      # macOS: download and build GLPK as a static library before the wheel build
+      CIBW_BEFORE_BUILD_MACOS: >-
+        curl -fsSL -o /tmp/glpk-5.0.tar.gz https://ftp.gnu.org/gnu/glpk/glpk-5.0.tar.gz &&
+        cd /tmp &&
+        tar xzf glpk-5.0.tar.gz &&
+        cd glpk-5.0 &&
+        ./configure --disable-shared --enable-static --with-pic --prefix=/usr/local &&
+        make -j$(sysctl -n hw.ncpu) &&
+        sudo make install
+      # macOS: add /usr/local paths so the build can find the installed GLPK
+      CIBW_ENVIRONMENT_MACOS: "CPATH=/usr/local/include:$CPATH LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
       # Use 'build', not 'pip wheel'
       CIBW_BUILD_FRONTEND: build
     steps:
@@ -86,7 +97,7 @@ jobs:
         run: |
           "${{ steps.python.outputs.python-path }}" -m pip install pipx
           export PATH=build/bin:$PATH
-          export CIBW_BEFORE_ALL="( $(sage-print-system-package-command debian --yes --no-install-recommends install $(sage-get-system-packages debian $SPKGS)) || $(sage-print-system-package-command fedora --yes --no-install-recommends install $(sage-get-system-packages fedora $SPKGS | sed s/pkg-config/pkgconfig/)) || ( $(sage-print-system-package-command homebrew --yes --no-install-recommends install $(sage-get-system-packages homebrew $SPKGS)) || $(sage-print-system-package-command alpine --yes --no-install-recommends install $(sage-get-system-packages alpine $SPKGS)) || echo error ignored) ) && ./bootstrap && ./configure --enable-build-as-root --enable-fat-binary --disable-meson-check --disable-boost && MAKE=\"make -j6\" make V=0 $TARGETS_PRE && curl -fsSL -o /tmp/glpk-5.0.tar.gz https://ftp.gnu.org/gnu/glpk/glpk-5.0.tar.gz && cd /tmp && tar xzf glpk-5.0.tar.gz && cd glpk-5.0 && ./configure --disable-shared --enable-static --with-pic --prefix=/usr/local && make -j6 && make install"
+          export CIBW_BEFORE_ALL="( $(sage-print-system-package-command debian --yes --no-install-recommends install $(sage-get-system-packages debian $SPKGS)) || $(sage-print-system-package-command fedora --yes --no-install-recommends install $(sage-get-system-packages fedora $SPKGS | sed s/pkg-config/pkgconfig/)) || ( $(sage-print-system-package-command homebrew --yes --no-install-recommends install $(sage-get-system-packages homebrew $SPKGS)) || $(sage-print-system-package-command alpine --yes --no-install-recommends install $(sage-get-system-packages alpine $SPKGS)) || echo error ignored) ) && ./bootstrap && ./configure --enable-build-as-root --enable-fat-binary --disable-meson-check --disable-boost && MAKE=\"make -j6\" make V=0 $TARGETS_PRE"
           mkdir -p unpacked
           for pkg in pplpy; do
               (cd unpacked && tar xfz - ) < dist/$pkg*.tar.gz
