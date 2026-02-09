@@ -1,6 +1,5 @@
 project('ppl', 'cpp',
   version: '1.2',
-  default_options: ['cpp_std=c++17'],
 )
 
 cpp = meson.get_compiler('cpp')
