@@ -4,21 +4,8 @@ project('ppl', 'cpp',
 
 cpp = meson.get_compiler('cpp')
 
-# Find GMP / GMPXX (prefer static to avoid dual-GMP conflicts in wheels)
-gmp_dep = dependency('gmp', required: false)
-if not gmp_dep.found()
-  gmp_dep = cpp.find_library('gmp', static: true, required: false)
-  if not gmp_dep.found()
-    gmp_dep = cpp.find_library('gmp')
-  endif
-endif
-gmpxx_dep = dependency('gmpxx', required: false)
-if not gmpxx_dep.found()
-  gmpxx_dep = cpp.find_library('gmpxx', static: true, required: false)
-  if not gmpxx_dep.found()
-    gmpxx_dep = cpp.find_library('gmpxx')
-  endif
-endif
+gmp_dep = dependency('gmp')
+gmpxx_dep = dependency('gmpxx')
 
 # ---------- sizes (used by ppl-config.h) ----------
 sz_char       = cpp.sizeof('char')
@@ -443,14 +430,12 @@ ppl_sources = files(
 ppl_config_inc = include_directories('.')   # for generated ppl-config.h / version.hh
 ppl_src_inc    = include_directories('src') # for all the _defs.hh / _inlines.hh
 
-ppl_lib = static_library('ppl', ppl_sources,
+ppl_lib = library('ppl', ppl_sources,
   include_directories: [ppl_config_inc, ppl_src_inc],
   dependencies: [gmp_dep, gmpxx_dep],
   cpp_args: ['-DNDEBUG'],
-  pic: true,
 )
 
-# ---------- Declare dependency for consumers ----------
 ppl_dep = declare_dependency(
   link_with: ppl_lib,
   include_directories: [ppl_config_inc, ppl_src_inc],

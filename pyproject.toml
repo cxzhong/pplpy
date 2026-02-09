@@ -8,6 +8,9 @@ requires = [
 ]
 build-backend = "mesonpy"
 
+[tool.meson-python.args]
+setup = ['--default-library=static']
+
 [project]
 name = "pplpy"
 description = "Python PPL wrapper"

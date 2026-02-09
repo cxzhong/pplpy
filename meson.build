@@ -2,10 +2,8 @@ project('pplpy', 'cpp', 'cython',
   version: '0.8.10',
 )
 
-# ---------- Python ----------
 py = import('python').find_installation(pure: false)
 
-# ---------- PPL ----------
 # Try to find system PPL via ppl-config script, fall back to bundled subproject
 ppl_config = find_program('ppl-config', required: false)
 if ppl_config.found()
@@ -25,8 +23,5 @@ else
   ppl_cpp_std_override = []
 endif
 
-# ---------- Build the ppl package ----------
 subdir('ppl')
-
-# ---------- Tests ----------
 subdir('tests')

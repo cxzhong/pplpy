@@ -1,54 +1,46 @@
-# ---------- Dependencies ----------
-gmp_dep = dependency('gmp', required: false)
-cpp = meson.get_compiler('cpp')
-if not gmp_dep.found()
-  gmp_dep = cpp.find_library('gmp', static: true, required: false)
-  if not gmp_dep.found()
-    gmp_dep = cpp.find_library('gmp')
-  endif
-endif
-gmpxx_dep = dependency('gmpxx', required: false)
-if not gmpxx_dep.found()
-  gmpxx_dep = cpp.find_library('gmpxx', static: true, required: false)
-  if not gmpxx_dep.found()
-    gmpxx_dep = cpp.find_library('gmpxx')
-  endif
-endif
+gmp_dep = dependency('gmp')
+gmpxx_dep = dependency('gmpxx')
 
-cysignals_dep = dependency('cysignals', required: false)
-if not cysignals_dep.found()
-  # cysignals installs headers alongside the Python package
-  cysignals_inc = run_command(py, '-c',
-    'import cysignals; import os; print(os.path.dirname(cysignals.__file__))',
-    check: true,
-  ).stdout().strip()
-  cysignals_dep = declare_dependency(
-    compile_args: ['-I' + cysignals_inc],
-  )
-endif
+inc_cysignals = run_command(
+  py,
+  [
+    '-c',
+    '''
+from os.path import relpath
+import cysignals
+path = cysignals.__file__.replace('__init__.py', '')
+try:
+  print(relpath(path))
+except Exception:
+  print(path)
+    '''.strip(),
+  ],
+  check: true,
+).stdout().strip()
+cysignals_dep = declare_dependency(include_directories: inc_cysignals)
 
-gmpy2_dep = dependency('gmpy2', required: false)
-if not gmpy2_dep.found()
-  gmpy2_inc = run_command(py, '-c',
-    'import gmpy2; print(gmpy2.__file__.rsplit("/",1)[0])',
-    check: true,
-  ).stdout().strip()
-  gmpy2_dep = declare_dependency(
-    compile_args: ['-I' + gmpy2_inc],
-  )
-endif
+inc_gmpy2 = run_command(
+  py,
+  [
+    '-c',
+    '''
+from os.path import relpath
+import gmpy2
+path = gmpy2.__file__.replace('__init__.py', '')
+try:
+  print(relpath(path))
+except Exception:
+  print(path)
+    '''.strip(),
+  ],
+  check: true,
+).stdout().strip()
+gmpy2_dep = declare_dependency(include_directories: inc_gmpy2)
 
-# Include directories for ppl_shim.hh
 ppl_shim_inc = include_directories('.')
 
-# Common dependencies for all Cython extensions
 common_deps = [ppl_dep, gmp_dep, gmpxx_dep, cysignals_dep, gmpy2_dep]
 common_cpp_args = ['-DNDEBUG']
-
-# ---------- Cython extension modules ----------
-# Each module needs:
-#   - The .pyx file  (Cython transpiles it to .cpp)
-#   - ppl_shim.cc    (small C++ helper compiled alongside)
 
 extensions = {
   'linear_algebra': 'linear_algebra.pyx',
@@ -69,21 +61,13 @@ foreach ext_name, pyx_file : extensions
     install: true,
     install_dir: py.get_install_dir() / 'ppl',
     cpp_args: common_cpp_args,
-    cython_args: [
-      '--directive', 'embedsignature=True',
-      '--directive', 'language_level=3',
-    ],
   )
 endforeach
 
-# ---------- Install pure-Python and data files ----------
 py.install_sources(
   '__init__.py',
   subdir: 'ppl',
 )
-
-# Copy __init__.py into builddir/ppl/ so tests can import ppl from the build tree
-configure_file(input: '__init__.py', output: '__init__.py', copy: true)
 
 # Install .pxd files so downstream Cython code can cimport ppl
 py.install_sources(
@@ -98,7 +82,6 @@ py.install_sources(
   subdir: 'ppl',
 )
 
-# Install C++ shim headers
 install_data(
   'ppl_shim.hh',
   install_dir: py.get_install_dir() / 'ppl',
