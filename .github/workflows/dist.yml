@@ -2,123 +2,124 @@ name: Distributions
 
 on:
   push:
+    branches: [ "master" ]
+    tags: [ "*" ]
   pull_request:
   workflow_dispatch:
 
 concurrency:
-  # Cancel previous runs of this workflow for the same branch
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
 
-  sdists_for_pypi:
-    name: Build sdist (and upload to PyPI on release tags)
+  sdist:
+    name: Build sdist
     runs-on: ubuntu-latest
-    env:
-      CAN_DEPLOY: ${{ secrets.SAGEMATH_PYPI_API_TOKEN != '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-      - name: make sdist
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install system dependencies
         run: |
-          python3 -m pip install build
-          python3 -m build --sdist
-      - uses: actions/upload-artifact@v5
+          sudo apt-get update
+          sudo apt-get install -y libgmp-dev libmpfr-dev libmpc-dev
+
+      - name: Build sdist
+        run: |
+          pip install build
+          python -m build --sdist
+
+      - uses: actions/upload-artifact@v6
         with:
-          path: "dist/*.tar.gz"
-          name: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.SAGEMATH_PYPI_API_TOKEN }}
-          skip_existing: true
-          verbose: true
-        if: env.CAN_DEPLOY == 'true' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+          name: dist-sdist
+          path: dist/*.tar.gz
 
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: sdists_for_pypi
+    needs: sdist
     strategy:
       fail-fast: false
       matrix:
         os:
           - ubuntu-latest
           - macos-latest
-          - ubuntu-24.04-arm
           - macos-15-intel
+          - ubuntu-24.04-arm
     env:
-      # SPKGs to install as system packages
-      SPKGS: _bootstrap _prereq gmp mpfr mpc
-      # Non-Python packages to install as spkgs
-      TARGETS_PRE: gmp mpfr mpc ppl-ensure
-      # Environment during wheel build
-      CIBW_ENVIRONMENT: "PATH=$(pwd)/local/bin:$PATH CPATH=$(pwd)/local/include:$CPATH LIBRARY_PATH=$(pwd)/local/lib:$LIBRARY_PATH LD_LIBRARY_PATH=$(pwd)/local/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=$(pwd)/local/share/pkgconfig:$PKG_CONFIG_PATH ACLOCAL_PATH=/usr/share/aclocal"
-      # Use 'build', not 'pip wheel'
+      CIBW_BUILD: "cp312-* cp313-* cp314-* cp314t-*"
+      CIBW_ENABLE: "cpython-freethreading"
+      CIBW_BEFORE_BUILD_LINUX: >-
+        (command -v apk > /dev/null && apk add --no-cache m4 g++ || true) &&
+        cd /tmp &&
+        tar xJf {project}/gmp-6.3.0.tar.xz &&
+        cd gmp-6.3.0 &&
+        ./configure --disable-shared --enable-static --enable-cxx --with-pic --prefix=/usr/local &&
+        make -j$(nproc) &&
+        make install &&
+        cd /tmp &&
+        tar xzf {project}/glpk-5.0.tar.gz &&
+        cd glpk-5.0 &&
+        ./configure --disable-shared --enable-static --with-pic --prefix=/usr/local &&
+        make -j$(nproc) &&
+        make install
+      CIBW_ENVIRONMENT_LINUX: >-
+        LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH
+        CPATH=/usr/local/include:$CPATH
+        PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+      CIBW_BEFORE_BUILD_MACOS: >-
+        brew install gmp glpk &&
+        rm -f $(brew --prefix gmp)/lib/libgmp*.dylib $(brew --prefix gmp)/lib/libgmpxx*.dylib &&
+        rm -f $(brew --prefix glpk)/lib/libglpk*.dylib
+      CIBW_ENVIRONMENT_MACOS: >-
+        MACOSX_DEPLOYMENT_TARGET=15.0
+        CPATH=$(brew --prefix gmp)/include:$(brew --prefix glpk)/include:$CPATH
+        LIBRARY_PATH=$(brew --prefix gmp)/lib:$(brew --prefix glpk)/lib:$LIBRARY_PATH
       CIBW_BUILD_FRONTEND: build
+      CIBW_TEST_COMMAND: >-
+        python {project}/tests/runtests.py
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository:   sagemath/sage
-          ref:          develop
+      - uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/setup-python@v6
         with:
-          name: dist
-          path: dist
+          python-version: "3.13"
 
-      - uses: actions/setup-python@v5
-        # As of 2024-02-03, the macOS M1 runners do not have preinstalled python or pipx.
-        # Installing pipx follows the approach of https://github.com/pypa/cibuildwheel/pull/1743
-        id: python
-        with:
-          python-version: "3.12 - 3.14"
-          update-environment: false
-
-      - name: Build platform wheels
-        # We build the wheel from the sdist.
-        # But we must run cibuildwheel with the unpacked source directory, not a tarball,
-        # so that SAGE_ROOT is copied into the build containers.
-        #
-        # In the CIBW_BEFORE_ALL phase, we install libraries using the Sage distribution.
-        # https://cibuildwheel.readthedocs.io/en/stable/options/#before-all
+      - name: Download GMP & GLPK source
         run: |
-          "${{ steps.python.outputs.python-path }}" -m pip install pipx
-          export PATH=build/bin:$PATH
-          export CIBW_BEFORE_ALL="( $(sage-print-system-package-command debian --yes --no-install-recommends install $(sage-get-system-packages debian $SPKGS)) || $(sage-print-system-package-command fedora --yes --no-install-recommends install $(sage-get-system-packages fedora $SPKGS | sed s/pkg-config/pkgconfig/)) || ( $(sage-print-system-package-command homebrew --yes --no-install-recommends install $(sage-get-system-packages homebrew $SPKGS)) || $(sage-print-system-package-command alpine --yes --no-install-recommends install $(sage-get-system-packages alpine $SPKGS)) || echo error ignored) ) && ./bootstrap && ./configure --enable-build-as-root --enable-fat-binary --disable-meson-check --disable-boost && MAKE=\"make -j6\" make V=0 $TARGETS_PRE"
-          mkdir -p unpacked
-          for pkg in pplpy; do
-              (cd unpacked && tar xfz - ) < dist/$pkg*.tar.gz
-              "${{ steps.python.outputs.python-path }}" -m pipx run cibuildwheel==3.2.1 unpacked/$pkg*
-          done
+          curl -fL --retry 3 --connect-timeout 30 -o gmp-6.3.0.tar.xz https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz
+          curl -fL --retry 3 --connect-timeout 30 -o glpk-5.0.tar.gz https://ftp.gnu.org/gnu/glpk/glpk-5.0.tar.gz
 
-      - uses: actions/upload-artifact@v5
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.3.1
+        with:
+          output-dir: wheelhouse
+
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
-  pypi-publish:
-    # https://github.com/pypa/gh-action-pypi-publish
-    name: Upload wheels to PyPI
-    needs: build_wheels
+  pypi_publish:
+    name: Upload to PyPI
+    needs: [sdist, build_wheels]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
-    env:
-      CAN_DEPLOY: ${{ secrets.SAGEMATH_PYPI_API_TOKEN != '' }}
+    environment: pypi
+    permissions:
+      id-token: write
     steps:
-
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
-          name: wheels
-          path: wheelhouse
+          path: dist
+          merge-multiple: true
 
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.SAGEMATH_PYPI_API_TOKEN }}
-          packages_dir: wheelhouse/
-          skip_existing: true
+          packages-dir: dist/
+          skip-existing: true
           verbose: true
-        if: env.CAN_DEPLOY == 'true'

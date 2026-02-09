@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: freethreading_compatible = True
 # distutils: libraries = gmp gmpxx ppl m
 #*****************************************************************************
 #       Copyright (C) 2010-2014 Volker Braun  <vbraun.name@gmail.com>

@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: freethreading_compatible = True
 # distutils: libraries = gmp gmpxx ppl m
 #*****************************************************************************
 #       Copyright (C) 2020 Vincent Delecroix <vincent.delecroix@labri.fr>
