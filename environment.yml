@@ -8,3 +8,4 @@ dependencies:
   - gmpy2
   - cysignals
   - cython
+  - ppl
