@@ -5,14 +5,6 @@ project(
 )
 
 # ---------- Build PPL using its native autotools build system ----------
-#
-# We invoke configure-wrapper (which runs the real ./configure and
-# generates a ppl.pc pkg-config file) followed by make && make install
-# at Meson configure time.
-#
-# The unstable-external_project module (used by sagemath/sage's ECL
-# subproject) cannot be used here because it registers PPL's install
-# targets with Meson, and meson-python cannot map those to wheel paths.
 
 gmp_dep = dependency('gmp')
 gmpxx_dep = dependency('gmpxx')
