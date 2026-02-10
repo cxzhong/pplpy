@@ -6,18 +6,20 @@ project(
 
 # ---------- Build PPL using its native autotools build system ----------
 #
-# Instead of reimplementing the entire PPL build in Meson, we invoke the
-# upstream autotools configure & make.  This mirrors the approach used by
-# primecountpy (method = cmake) – except PPL ships autotools, so we call
-# ./configure + make here.
+# We invoke configure-wrapper (which runs the real ./configure and
+# generates a ppl.pc pkg-config file) followed by make && make install
+# at Meson configure time.
+#
+# The unstable-external_project module (used by sagemath/sage's ECL
+# subproject) cannot be used here because it registers PPL's install
+# targets with Meson, and meson-python cannot map those to wheel paths.
 
 gmp_dep = dependency('gmp')
 gmpxx_dep = dependency('gmpxx')
 
-# Locate GMP include/lib dirs for autotools --with-gmp-include / --with-gmp-lib.
+# ---------- Locate GMP for --with-gmp-include / --with-gmp-lib ----------
 # On multiarch systems (e.g. Debian/Ubuntu) headers may live under
 # /usr/include/<triplet> while libs are under /usr/lib/<triplet>.
-# We find the actual directory containing gmp.h and the directory with libgmp.
 gmp_libdir = run_command(
     'pkg-config', '--variable=libdir', 'gmp', check: true,
 ).stdout().strip()
@@ -28,17 +30,9 @@ gmp_includedir = run_command(
     check: false,
 ).stdout().strip()
 
-# GLPK (optional) – PPL auto-detects glpk.h; we pass CPPFLAGS/LDFLAGS so
-# configure can find it even in non-standard locations.
-cpp = meson.get_compiler('cpp')
-glpk_dep = dependency('glpk', required: false)
-if not glpk_dep.found()
-    # No pkg-config file; try to detect glpk.h directly.
-    if cpp.has_header('glpk.h')
-        glpk_dep = declare_dependency(link_args: ['-lglpk'])
-    endif
-endif
-# Locate GLPK paths for configure's header/library search.
+# ---------- Locate GLPK (optional) ----------
+# PPL auto-detects glpk.h; pass paths via CPPFLAGS/LDFLAGS so configure
+# can find it even in non-standard locations.
 glpk_includedir = run_command(
     'sh', '-c',
     '''echo '#include <glpk.h>' | cpp -M - 2>/dev/null | tr ' ' '\n' | grep '/glpk\\.h$' | head -1 | xargs dirname''',
@@ -54,23 +48,28 @@ ppl_source_dir = meson.current_source_dir()
 ppl_build_dir = meson.current_build_dir() / '_autotools'
 ppl_install_dir = meson.current_build_dir() / '_install'
 
-nproc_result = run_command('nproc', check: false)
+# nproc is Linux-only; use Python for cross-platform CPU count.
+nproc_result = run_command(
+    'python3', '-c', 'import os; print(os.cpu_count() or 1)', check: false,
+)
 nproc = nproc_result.returncode() == 0 ? nproc_result.stdout().strip() : '1'
 
-configure_flags = [
+# ---------- Configure options ----------
+configure_options = [
     '--prefix="' + ppl_install_dir + '"',
     '--disable-shared',
     '--enable-static',
     '--disable-documentation',
 ]
 if gmp_includedir != ''
-    configure_flags += ['--with-gmp-include=' + gmp_includedir]
+    configure_options += ['--with-gmp-include=' + gmp_includedir]
 endif
 if gmp_libdir != ''
-    configure_flags += ['--with-gmp-lib=' + gmp_libdir]
+    configure_options += ['--with-gmp-lib=' + gmp_libdir]
 endif
 
-# Build CPPFLAGS/LDFLAGS to help configure find GLPK (no --with-glpk in PPL 1.2).
+# ---------- Environment variables ----------
+# GLPK: no --with-glpk flag in PPL 1.2; pass paths via CPPFLAGS/LDFLAGS.
 extra_cppflags = []
 extra_ldflags = []
 if glpk_includedir != ''
@@ -88,8 +87,7 @@ if extra_ldflags.length() > 0
     configure_env += ['LDFLAGS="' + ' '.join(extra_ldflags) + '"']
 endif
 
-# Run ./configure && make && make install at configure time.
-# The tarball already ships a pre-generated configure script.
+# ---------- Build PPL via autotools ----------
 run_command(
     'sh', '-c',
     ' '.join([
@@ -97,7 +95,7 @@ run_command(
         'mkdir -p "' + ppl_build_dir + '" &&',
         'cd "' + ppl_build_dir + '" &&',
         '"' + ppl_source_dir + '/configure"',
-    ] + configure_flags + [
+    ] + configure_options + [
         'CXXFLAGS="-DNDEBUG -O2 -fPIC"',
     ] + configure_env + [
         '&&',
@@ -109,14 +107,8 @@ run_command(
 )
 
 # Expose the autotools-built library as a Meson dependency.
-all_deps = [gmp_dep, gmpxx_dep]
-if glpk_dep.found()
-    all_deps += [glpk_dep]
-endif
 ppl_dep = declare_dependency(
-    compile_args: [
-        '-I' + ppl_install_dir / 'include',
-    ],
+    compile_args: ['-I' + ppl_install_dir / 'include'],
     link_args: [ppl_install_dir / 'lib' / 'libppl.a'],
-    dependencies: all_deps,
+    dependencies: [gmp_dep, gmpxx_dep],
 )
