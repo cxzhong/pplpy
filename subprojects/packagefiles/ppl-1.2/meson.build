@@ -13,11 +13,15 @@ gmpxx_dep = dependency('gmpxx')
 # On multiarch systems (e.g. Debian/Ubuntu) headers may live under
 # /usr/include/<triplet> while libs are under /usr/lib/<triplet>.
 gmp_libdir = run_command(
-    'pkg-config', '--variable=libdir', 'gmp', check: true,
+    'pkg-config',
+    '--variable=libdir',
+    'gmp',
+    check: true,
 ).stdout().strip()
 # Ask the preprocessor where it finds gmp.h (handles multiarch reliably).
 gmp_includedir = run_command(
-    'sh', '-c',
+    'sh',
+    '-c',
     '''echo '#include <gmp.h>' | cpp -M - 2>/dev/null | tr ' ' '\n' | grep '/gmp\\.h$' | head -1 | xargs dirname''',
     check: false,
 ).stdout().strip()
@@ -26,12 +30,14 @@ gmp_includedir = run_command(
 # PPL auto-detects glpk.h; pass paths via CPPFLAGS/LDFLAGS so configure
 # can find it even in non-standard locations.
 glpk_includedir = run_command(
-    'sh', '-c',
+    'sh',
+    '-c',
     '''echo '#include <glpk.h>' | cpp -M - 2>/dev/null | tr ' ' '\n' | grep '/glpk\\.h$' | head -1 | xargs dirname''',
     check: false,
 ).stdout().strip()
 glpk_libdir = run_command(
-    'sh', '-c',
+    'sh',
+    '-c',
     'pkg-config --variable=libdir glpk 2>/dev/null || echo ""',
     check: false,
 ).stdout().strip()
@@ -42,7 +48,10 @@ ppl_install_dir = meson.current_build_dir() / '_install'
 
 # nproc is Linux-only; use Python for cross-platform CPU count.
 nproc_result = run_command(
-    'python3', '-c', 'import os; print(os.cpu_count() or 1)', check: false,
+    'python3',
+    '-c',
+    'import os; print(os.cpu_count() or 1)',
+    check: false,
 )
 nproc = nproc_result.returncode() == 0 ? nproc_result.stdout().strip() : '1'
 
@@ -81,20 +90,23 @@ endif
 
 # ---------- Build PPL via autotools ----------
 run_command(
-    'sh', '-c',
-    ' '.join([
-        'set -e &&',
-        'mkdir -p "' + ppl_build_dir + '" &&',
-        'cd "' + ppl_build_dir + '" &&',
-        '"' + ppl_source_dir + '/configure"',
-    ] + configure_options + [
-        'CXXFLAGS="-DNDEBUG -O2 -fPIC"',
-    ] + configure_env + [
-        '&&',
-        'make -j' + nproc,
-        '&&',
-        'make install',
-    ]),
+    'sh',
+    '-c',
+    ' '.join(
+        [
+            'set -e &&',
+            'mkdir -p "' + ppl_build_dir + '" &&',
+            'cd "' + ppl_build_dir + '" &&',
+            '"' + ppl_source_dir + '/configure"',
+        ] + configure_options + [
+            'CXXFLAGS="-DNDEBUG -O2 -fPIC"',
+        ] + configure_env + [
+            '&&',
+            'make -j' + nproc,
+            '&&',
+            'make install',
+        ],
+    ),
     check: true,
 )
 
