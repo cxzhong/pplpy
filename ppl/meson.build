@@ -40,7 +40,6 @@ gmpy2_dep = declare_dependency(include_directories: inc_gmpy2)
 ppl_shim_inc = include_directories('.')
 
 common_deps = [ppl_dep, gmp_dep, gmpxx_dep, cysignals_dep, gmpy2_dep]
-common_cpp_args = ['-DNDEBUG']
 
 extensions = {
     'linear_algebra': 'linear_algebra.pyx',
