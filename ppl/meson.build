@@ -61,7 +61,6 @@ foreach ext_name, pyx_file : extensions
         override_options: ['cython_language=cpp'] + ppl_cpp_std_override,
         install: true,
         install_dir: py.get_install_dir() / 'ppl',
-        cpp_args: common_cpp_args,
     )
 endforeach
 
