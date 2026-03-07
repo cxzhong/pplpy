@@ -21,8 +21,7 @@ if ppl_config.found()
     # Compile consumer code with C++11 to stay compatible.
     ppl_cpp_std_override = ['cpp_std=c++11']
 else
-    ppl_proj = subproject('ppl-1.2')
-    ppl_dep = ppl_proj.get_variable('ppl_dep')
+    ppl_dep = dependency('ppl')
     ppl_cpp_std_override = []
 endif
 
