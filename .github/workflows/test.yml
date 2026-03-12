@@ -11,83 +11,27 @@ permissions:
   contents: read
 
 jobs:
-  test-ubuntu:
-    runs-on: ubuntu-latest
+  test:
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest]
         python: ["3.12", "3.13", "3.14"]
+    defaults:
+      run:
+        shell: bash -el {0}
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python }}
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgmp-dev libmpfr-dev libmpc-dev libglpk-dev libppl-dev ppl-dev
-
-      - name: Install Python build dependencies
-        run: |
-          pip install --upgrade pip
-          pip install meson-python meson ninja cython cysignals "gmpy2>=2.1.0b1"
-
-      - name: Build and install
-        run: |
-          pip install --no-build-isolation --verbose .
+          environment-file: environment.yml
+          activate-environment: pplpy-build
 
       - name: Install test dependencies
-        run: |
-          pip install sphinx cython-lint
-
-      - name: Lint
-        run: |
-          cython-lint --ignore=E265,E266,E501,E741 --exclude='ppl_decl.pxd' ppl/
-
-      - name: Build (meson)
-        run: |
-          meson setup builddir
-          meson compile -C builddir
-
-      - name: Test (meson test)
-        run: |
-          meson test -C builddir -v
-
-      - name: Show logs
-        run: cat builddir/meson-logs/testlog.txt || true
-        if: ${{ always() }}
-
-  test-macos:
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ["3.12", "3.13", "3.14"]
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install system dependencies
-        run: |
-          brew install gmp mpfr libmpc glpk ppl
-
-      - name: Install Python build dependencies
-        run: |
-          pip install --upgrade pip
-          pip install meson-python meson ninja cython cysignals "gmpy2>=2.1.0b1"
-
-      - name: Build and install
-        run: |
-          pip install --no-build-isolation --verbose .
-
-      - name: Install test dependencies
-        run: |
-          pip install sphinx cython-lint
+        run: conda env update --file environment.test.yml
 
       - name: Lint
         run: |
