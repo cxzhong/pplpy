@@ -11,6 +11,23 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.test.yml
+          activate-environment: pplpy-test
+
+      - name: Lint
+        run: |
+          cython-lint --ignore=E265,E266,E501,E741 --exclude='ppl_decl.pxd' ppl/
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -29,13 +46,6 @@ jobs:
           python-version: ${{ matrix.python }}
           environment-file: environment.yml
           activate-environment: pplpy-build
-
-      - name: Install test dependencies
-        run: conda env update --file environment.test.yml
-
-      - name: Lint
-        run: |
-          cython-lint --ignore=E265,E266,E501,E741 --exclude='ppl_decl.pxd' ppl/
 
       - name: Build (meson)
         run: |
