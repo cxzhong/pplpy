@@ -1,5 +1,6 @@
 gmp_dep = dependency('gmp')
 gmpxx_dep = dependency('gmpxx')
+glpk_dep = dependency('glpk', required: false)
 
 inc_cysignals = run_command(
     py,
@@ -40,6 +41,9 @@ gmpy2_dep = declare_dependency(include_directories: inc_gmpy2)
 ppl_shim_inc = include_directories('.')
 
 common_deps = [ppl_dep, gmp_dep, gmpxx_dep, cysignals_dep, gmpy2_dep]
+if glpk_dep.found()
+    common_deps += [glpk_dep]
+endif
 
 extensions = {
     'linear_algebra': 'linear_algebra.pyx',
