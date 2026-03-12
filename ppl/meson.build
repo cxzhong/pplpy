@@ -79,10 +79,6 @@ py.install_sources(
     'constraint.pxd',
     'congruence.pxd',
     'bit_arrays.pxd',
-    subdir: 'ppl',
-)
-
-install_data(
     'ppl_shim.hh',
-    install_dir: py.get_install_dir() / 'ppl',
+    subdir: 'ppl',
 )
