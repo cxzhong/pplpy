@@ -47,15 +47,8 @@ jobs:
           environment-file: environment.yml
           activate-environment: pplpy-build
 
-      - name: Build (meson)
-        run: |
-          meson setup builddir
-          meson compile -C builddir
+      - name: Build and install
+        run: pip install --no-build-isolation .
 
-      - name: Test (meson test)
-        run: |
-          meson test -C builddir -v
-
-      - name: Show logs
-        run: cat builddir/meson-logs/testlog.txt || true
-        if: ${{ always() }}
+      - name: Test
+        run: python tests/runtests.py
