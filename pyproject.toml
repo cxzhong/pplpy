@@ -9,7 +9,7 @@ requires = [
 build-backend = "mesonpy"
 
 [tool.meson-python.args]
-setup = ['--default-library=static', '--buildtype=release']
+setup = ['--default-library=static']
 install = ['--skip-subprojects']
 
 [project]
